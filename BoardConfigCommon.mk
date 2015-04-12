@@ -22,6 +22,8 @@
 
 # Set this up here so that BoardVendorConfig.mk can override it
 BOARD_USES_GENERIC_AUDIO := false
+AUDIO_FEATURE_ENABLED_INCALL_MUSIC := false
+AUDIO_FEATURE_ENABLED_COMPRESS_VOIP := false
 
 BOARD_USES_LIBSECRIL_STUB := true
 
@@ -32,6 +34,8 @@ TARGET_CPU_ABI2 := armeabi
 TARGET_ARCH_VARIANT := armv7-a-neon
 TARGET_ARCH_VARIANT_CPU := cortex-a8
 TARGET_CPU_VARIANT := cortex-a8
+TARGET_CPU_SMP := false
+TARGET_KERNEL_CUSTOM_TOOLCHAIN := arm-eabi-4.7
 
 TARGET_NO_BOOTLOADER := true
 TARGET_NO_RADIOIMAGE := true
@@ -39,6 +43,17 @@ TARGET_NO_RADIOIMAGE := true
 TARGET_BOARD_PLATFORM := s5pc110
 TARGET_BOARD_PLATFORM_GPU := POWERVR_SGX540_120
 TARGET_BOOTLOADER_BOARD_NAME := s5pc110
+
+# Use dlmalloc instead of jemalloc for mallocs on low-ram target kernels
+MALLOC_IMPL := dlmalloc
+
+# Bionic stuff
+TARGET_NEEDS_BIONIC_MD5 := true
+TARGET_NEEDS_BIONIC_PRELINK_SUPPORT := true
+TARGET_ENABLE_NON_PIE_SUPPORT := true
+
+# RIL
+BOARD_RIL_CLASS := ../../../hardware/samsung/exynos3/s5pc110/ril/
 
 # Bluetooth
 BOARD_HAVE_BLUETOOTH := true
@@ -70,8 +85,16 @@ BOARD_SECOND_CAMERA_DEVICE := /dev/video2
 BOARD_CAMERA_HAVE_ISO := true
 
 # OpenGL stuff
-BOARD_EGL_CFG := device/samsung/p1-common/prebuilt/lib/egl/egl.cfg
+BOARD_EGL_CFG := device/samsung/p1-common/rootdir/system/lib/egl/egl.cfg
 USE_OPENGL_RENDERER := true
+
+# Enable dex-preoptimization to speed up first boot sequence
+ifeq ($(HOST_OS),linux)
+    WITH_DEXPREOPT := true
+    WITH_DEXPREOPT_BOOT_IMG_ONLY := true
+    DONT_DEXPREOPT_PREBUILTS := true
+endif
+DONT_DEXPREOPT_PREBUILTS := true
 
 # SkTextBox for libtvout
 BOARD_USES_SKTEXTBOX := true
@@ -107,7 +130,6 @@ BOARD_BATTERY_SYSFS_PATH := $(BOARD_POWER_SUPPLY_PATH)/battery
 BOARD_AC_SYSFS_PATH := $(BOARD_POWER_SUPPLY_PATH)/ac
 BOARD_USB_SYSFS_PATH := $(BOARD_POWER_SUPPLY_PATH)/usb
 BOARD_CHARGER_ENABLE_SUSPEND := true
-BOARD_CHARGER_DIM_SCREEN_BRIGHTNESS := true
 BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../../device/samsung/p1-common/recovery/keys.c
 BOARD_CUSTOM_GRAPHICS := ../../../device/samsung/p1-common/recovery/graphics.c
 
@@ -126,10 +148,14 @@ BOARD_CUSTOM_VSYNC_IOCTL := true
 # Dalvik startup with a low memory footprint
 TARGET_ARCH_LOWMEM := true
 
+# Include an expanded selection of fonts
+EXTENDED_FONT_FOOTPRINT := true
+
 # TWRP
 DEVICE_RESOLUTION := 1024x600
 BOARD_USES_BML_OVER_MTD := true
 TARGET_USERIMAGES_USE_EXT4 := true
+TARGET_USERIMAGES_USE_F2FS := true
 TARGET_RECOVERY_PRE_COMMAND := "echo 1 > /cache/.startrecovery; sync;"
 TARGET_RECOVERY_PIXEL_FORMAT := "RGB_565"
 BOARD_HAS_FLIPPED_SCREEN := true
@@ -141,25 +167,25 @@ TW_INCLUDE_FB2PNG := true
 TW_FLASH_FROM_STORAGE := true
 TW_NO_PARTITION_SD_CARD := true
 TW_EXCLUDE_SUPERSU := true
-TW_INTERNAL_STORAGE_PATH := "/sdcard"
-TW_INTERNAL_STORAGE_MOUNT_POINT := "sdcard"
 TW_MAX_BRIGHTNESS := 255
 TW_BRIGHTNESS_PATH := /sys/devices/platform/s3cfb/cmc623_pwm_bl/backlight/s5p_bl/brightness
+RECOVERY_SDCARD_ON_DATA := true
+TW_INTERNAL_STORAGE_PATH := "/data/media"
+TW_INTERNAL_STORAGE_MOUNT_POINT := "data"
+TW_EXTERNAL_STORAGE_PATH := "/external_sd"
+TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
 
 # SELinux
-# BOARD_SEPOLICY_DIRS += \
-#    device/samsung/p1-common/sepolicy
+BOARD_SEPOLICY_DIRS += \
+    device/samsung/p1-common/sepolicy
 
-# BOARD_SEPOLICY_UNION += \
-#    device.te \
-#    domain.te \
-#    file_contexts \
-#    mediaserver.te \
-#    property_contexts \
-#    pvrsrvinit.te \
-#    rild.te \
-#    tvouthack.te \
-#    tvoutserver.te
+BOARD_SEPOLICY_UNION += \
+    device.te \
+    file_contexts \
+    mediaserver.te \
+    property_contexts \
+    pvrsrvinit.te \
+    rild.te
 
 TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
 BOARD_EGL_WORKAROUND_BUG_10194508 := true
